@@ -10,6 +10,8 @@ interface DecisionContextType {
   getDecision: (id: string) => Decision | undefined;
   pendingCount: number;
   executingCount: number;
+  deferredCount: number;
+  completedCount: number;
 }
 
 const DecisionContext = createContext<DecisionContextType | undefined>(undefined);
@@ -30,6 +32,8 @@ export function DecisionProvider({ children }: { children: ReactNode }) {
 
   const pendingCount = decisions.filter(d => d.stage === 'pending').length;
   const executingCount = decisions.filter(d => d.stage === 'executing').length;
+  const deferredCount = decisions.filter(d => d.stage === 'deferred').length;
+  const completedCount = decisions.filter(d => d.stage === 'completed').length;
 
   return (
     <DecisionContext.Provider value={{
@@ -39,7 +43,9 @@ export function DecisionProvider({ children }: { children: ReactNode }) {
       updateDecisionStage,
       getDecision,
       pendingCount,
-      executingCount
+      executingCount,
+      deferredCount,
+      completedCount
     }}>
       {children}
     </DecisionContext.Provider>

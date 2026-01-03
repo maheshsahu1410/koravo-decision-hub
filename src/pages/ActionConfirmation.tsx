@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ShieldCheck, RotateCcw, AlertCircle, CheckCircle2, Lock } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, RotateCcw, AlertCircle, CheckCircle2, Lock, Clock, AlertTriangle } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { RiskIndicator } from '@/components/decisions/RiskIndicator';
 import { LifecycleIndicator } from '@/components/decisions/LifecycleIndicator';
 import { getDecisionById } from '@/data/decisions';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 export default function ActionConfirmation() {
   const { id } = useParams<{ id: string }>();
@@ -29,7 +30,7 @@ export default function ActionConfirmation() {
     );
   }
 
-  const { insight, recommendation } = decision;
+  const { insight, recommendation, impact } = decision;
 
   const handleExecute = () => {
     setIsExecuting(true);
@@ -67,7 +68,7 @@ export default function ActionConfirmation() {
         </div>
         <h1 className="text-2xl font-semibold text-foreground mb-2">Final Confirmation</h1>
         <p className="text-muted-foreground max-w-md mx-auto">
-          You are about to authorize an action. Please review the details carefully.
+          You are about to authorize an action. Please review the details carefully before proceeding.
         </p>
       </header>
 
@@ -82,16 +83,21 @@ export default function ActionConfirmation() {
             <div className="w-10 h-10 rounded-xl bg-info/20 flex items-center justify-center flex-shrink-0">
               <AlertCircle className="w-5 h-5 text-info" />
             </div>
-            <div>
-              <h4 className="text-sm font-medium text-foreground mb-1">What will change</h4>
-              <p className="text-sm text-muted-foreground">{recommendation.summary}</p>
+            <div className="flex-1">
+              <h4 className="text-sm font-medium text-foreground mb-2">What will change</h4>
+              <p className="text-sm text-muted-foreground mb-2">{recommendation.summary}</p>
+              <ul className="space-y-1">
+                {recommendation.willChange.slice(0, 3).map((item, i) => (
+                  <li key={i} className="text-xs text-muted-foreground">• {item}</li>
+                ))}
+              </ul>
             </div>
           </div>
 
           {/* Duration */}
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
-              <span className="text-muted-foreground text-sm">⏱</span>
+              <Clock className="w-5 h-5 text-muted-foreground" />
             </div>
             <div>
               <h4 className="text-sm font-medium text-foreground mb-1">Duration</h4>
@@ -110,13 +116,24 @@ export default function ActionConfirmation() {
             </div>
           </div>
 
+          {/* Impact */}
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-warning/20 flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="w-5 h-5 text-warning" />
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-foreground mb-1">Potential impact being addressed</h4>
+              <p className="text-sm text-muted-foreground">{impact.value} {impact.description} {impact.timeframe}</p>
+            </div>
+          </div>
+
           {/* Risk Level */}
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
               <ShieldCheck className="w-5 h-5 text-muted-foreground" />
             </div>
             <div>
-              <h4 className="text-sm font-medium text-foreground mb-1">Risk assessment</h4>
+              <h4 className="text-sm font-medium text-foreground mb-2">Risk assessment</h4>
               <RiskIndicator risk={recommendation.riskLevel} showDescription />
             </div>
           </div>
@@ -139,21 +156,31 @@ export default function ActionConfirmation() {
         </CardContent>
       </Card>
 
-      {/* Confirmation Checkbox */}
-      <Card className="bg-primary/5 border-primary/20 mb-8">
+      {/* Confirmation Checkbox - MANDATORY */}
+      <Card className={cn(
+        'mb-8 transition-colors',
+        confirmed 
+          ? 'bg-primary/10 border-primary/30' 
+          : 'bg-warning/5 border-warning/30'
+      )}>
         <CardContent className="p-5">
           <label className="flex items-start gap-4 cursor-pointer">
             <Checkbox 
               checked={confirmed}
               onCheckedChange={(checked) => setConfirmed(checked as boolean)}
-              className="mt-0.5 border-primary data-[state=checked]:bg-primary"
+              className={cn(
+                'mt-0.5',
+                confirmed 
+                  ? 'border-primary data-[state=checked]:bg-primary' 
+                  : 'border-warning'
+              )}
             />
             <div>
               <span className="text-sm font-medium text-foreground block">
-                I have reviewed and authorize this action
+                I understand the risks and approve this action
               </span>
               <span className="text-xs text-muted-foreground">
-                I understand what will change and accept responsibility for this decision.
+                I have reviewed the parameters, risks, and expected outcomes. I accept responsibility for this decision.
               </span>
             </div>
           </label>
@@ -171,7 +198,12 @@ export default function ActionConfirmation() {
         </Button>
         <Button 
           size="lg"
-          className="bg-primary text-primary-foreground hover:bg-primary/90 min-w-[180px]"
+          className={cn(
+            'min-w-[180px] transition-all',
+            confirmed 
+              ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+              : 'bg-muted text-muted-foreground cursor-not-allowed'
+          )}
           disabled={!confirmed || isExecuting}
           onClick={handleExecute}
         >
@@ -188,6 +220,11 @@ export default function ActionConfirmation() {
           )}
         </Button>
       </div>
+
+      {/* Footer note */}
+      <p className="text-xs text-muted-foreground text-center mt-6">
+        KORAVO assists decisions. It never acts without your approval.
+      </p>
     </AppShell>
   );
 }

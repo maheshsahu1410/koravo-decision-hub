@@ -1,11 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Clock } from 'lucide-react';
+import { ArrowRight, Clock, TrendingUp, TrendingDown, Minus, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Decision } from '@/types/decision';
+import { Decision, Momentum, Confidence } from '@/types/decision';
 import { PriorityIndicator } from './PriorityIndicator';
 import { ConfidenceMeter } from './ConfidenceMeter';
-import { ImpactCard } from './ImpactCard';
 import { LifecycleIndicator } from './LifecycleIndicator';
 import { cn } from '@/lib/utils';
 
@@ -14,9 +13,24 @@ interface DecisionCardProps {
   index?: number;
 }
 
+const momentumConfig: Record<Momentum, { label: string; icon: typeof TrendingUp; color: string }> = {
+  accelerating: { label: 'Accelerating', icon: TrendingUp, color: 'text-critical' },
+  degrading: { label: 'Degrading', icon: TrendingDown, color: 'text-warning' },
+  stable: { label: 'Stable', icon: Minus, color: 'text-muted-foreground' },
+  improving: { label: 'Improving', icon: TrendingDown, color: 'text-success' }
+};
+
 export function DecisionCard({ decision, index = 0 }: DecisionCardProps) {
   const navigate = useNavigate();
   const { insight, impact, stage } = decision;
+  
+  const momentum = insight.momentum || 'stable';
+  const MomentumIcon = momentumConfig[momentum].icon;
+  
+  // Get confidence value
+  const confidenceValue = typeof insight.confidence === 'object' 
+    ? insight.confidence.overall 
+    : insight.confidence;
 
   return (
     <Card 
@@ -24,20 +38,29 @@ export function DecisionCard({ decision, index = 0 }: DecisionCardProps) {
         'group cursor-pointer transition-all duration-300',
         'bg-card border-border hover:border-primary/30',
         'hover:shadow-[0_0_40px_hsl(38_92%_50%_/_0.08)]',
-        'animate-fade-in-up'
+        'animate-fade-in-up',
+        insight.priority === 'critical' && 'border-l-4 border-l-critical'
       )}
       style={{ animationDelay: `${index * 80}ms` }}
       onClick={() => navigate(`/decision/${decision.id}`)}
     >
       <CardContent className="p-6">
         {/* Header Row */}
-        <div className="flex items-start justify-between gap-4 mb-5">
+        <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-3 mb-3 flex-wrap">
               <PriorityIndicator priority={insight.priority} />
               <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" />
                 Detected {insight.detectedAt}
+              </span>
+              {/* Momentum indicator */}
+              <span className={cn(
+                'text-xs flex items-center gap-1',
+                momentumConfig[momentum].color
+              )}>
+                <MomentumIcon className="w-3.5 h-3.5" />
+                {momentumConfig[momentum].label}
               </span>
             </div>
             <h3 className="text-xl font-semibold text-foreground leading-tight group-hover:text-primary transition-colors">
@@ -48,14 +71,22 @@ export function DecisionCard({ decision, index = 0 }: DecisionCardProps) {
           <LifecycleIndicator currentStage={stage} compact />
         </div>
 
+        {/* Urgency Window */}
+        {insight.urgencyWindow && (
+          <div className="flex items-center gap-2 mb-4 px-3 py-2 bg-warning/10 rounded-lg border border-warning/20">
+            <AlertCircle className="w-4 h-4 text-warning flex-shrink-0" />
+            <span className="text-sm text-warning font-medium">{insight.urgencyWindow}</span>
+          </div>
+        )}
+
         {/* Confidence & Impact */}
         <div className="grid grid-cols-2 gap-4 mb-5">
           <div className="bg-muted/30 rounded-xl p-4">
-            <ConfidenceMeter value={insight.confidence} size="sm" />
+            <ConfidenceMeter value={confidenceValue} size="sm" />
           </div>
           <div className="bg-gradient-to-br from-critical/5 to-critical/10 border border-critical/20 rounded-xl p-4">
             <span className="text-[10px] text-critical font-medium uppercase tracking-wide block mb-1">
-              Impact
+              Impact if ignored
             </span>
             <div className="flex items-baseline gap-1.5">
               <span className="font-mono text-lg font-semibold text-foreground">{impact.value}</span>

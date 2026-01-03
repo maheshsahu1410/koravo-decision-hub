@@ -8,15 +8,16 @@ interface LifecycleIndicatorProps {
   className?: string;
 }
 
-const stages: DecisionStage[] = ['pending', 'reviewing', 'approved', 'executing', 'completed'];
+// Main lifecycle stages for display (excluding deferred, dismissed, failed)
+const stages: DecisionStage[] = ['pending', 'in_review', 'approved', 'executing', 'completed'];
 
 export function LifecycleIndicator({ currentStage, compact = false, className }: LifecycleIndicatorProps) {
-  const currentOrder = DECISION_STAGES[currentStage].order;
+  const currentOrder = DECISION_STAGES[currentStage]?.order ?? 0;
 
   if (compact) {
     return (
       <div className={cn('flex items-center gap-1.5', className)}>
-        {stages.map((stage, index) => {
+        {stages.map((stage) => {
           const stageOrder = DECISION_STAGES[stage].order;
           const isCompleted = stageOrder < currentOrder;
           const isCurrent = stage === currentStage;

@@ -5,7 +5,9 @@ import {
   History, 
   Settings,
   Hexagon,
-  ChevronRight
+  ChevronRight,
+  BookOpen,
+  Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDecisions } from '@/context/DecisionContext';
@@ -26,10 +28,23 @@ const navItems = [
     countKey: 'executing' as const
   },
   { 
+    label: 'Deferred', 
+    icon: Clock, 
+    path: '/deferred',
+    description: 'Postponed decisions',
+    countKey: 'deferred' as const
+  },
+  { 
     label: 'History', 
     icon: History, 
     path: '/history',
     description: 'Past decisions'
+  },
+  { 
+    label: 'Learning', 
+    icon: BookOpen, 
+    path: '/learning',
+    description: 'System adaptations'
   },
   { 
     label: 'Settings', 
@@ -41,11 +56,12 @@ const navItems = [
 
 export function Sidebar() {
   const location = useLocation();
-  const { pendingCount, executingCount } = useDecisions();
+  const { pendingCount, executingCount, deferredCount } = useDecisions();
 
-  const getCounts = (key?: 'pending' | 'executing') => {
+  const getCounts = (key?: 'pending' | 'executing' | 'deferred') => {
     if (key === 'pending') return pendingCount;
     if (key === 'executing') return executingCount;
+    if (key === 'deferred') return deferredCount;
     return null;
   };
 
@@ -67,7 +83,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-6 px-4">
+      <nav className="flex-1 py-6 px-4 overflow-y-auto">
         <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-3 px-3">
           Decision Lifecycle
         </p>
