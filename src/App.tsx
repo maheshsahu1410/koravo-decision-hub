@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { DecisionProvider } from "./context/DecisionContext";
+import { IntentProvider } from "./context/IntentContext";
 import InsightFeed from "./pages/InsightFeed";
 import DecisionDetail from "./pages/DecisionDetail";
 import RecommendedAction from "./pages/RecommendedAction";
@@ -20,34 +21,36 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <DecisionProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Decision Lifecycle Flow */}
-            <Route path="/" element={<InsightFeed />} />
-            <Route path="/decision/:id" element={<DecisionDetail />} />
-            <Route path="/decision/:id/action" element={<RecommendedAction />} />
-            <Route path="/decision/:id/confirm" element={<ActionConfirmation />} />
-            
-            {/* Monitoring */}
-            <Route path="/monitoring" element={<MonitoringList />} />
-            <Route path="/monitoring/:id" element={<MonitoringDetail />} />
-            
-            {/* Other */}
-            <Route path="/deferred" element={<Deferred />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/learning" element={<Learning />} />
-            <Route path="/settings" element={<Settings />} />
-            
-            {/* Catch-all */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </DecisionProvider>
+    <IntentProvider>
+      <DecisionProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Decision Lifecycle Flow */}
+              <Route path="/" element={<InsightFeed />} />
+              <Route path="/decision/:id" element={<DecisionDetail />} />
+              <Route path="/decision/:id/action" element={<RecommendedAction />} />
+              <Route path="/decision/:id/confirm" element={<ActionConfirmation />} />
+              
+              {/* Monitoring */}
+              <Route path="/monitoring" element={<MonitoringList />} />
+              <Route path="/monitoring/:id" element={<MonitoringDetail />} />
+              
+              {/* Other */}
+              <Route path="/deferred" element={<Deferred />} />
+              <Route path="/history" element={<History />} />
+              <Route path="/learning" element={<Learning />} />
+              <Route path="/settings" element={<Settings />} />
+              
+              {/* Catch-all */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </DecisionProvider>
+    </IntentProvider>
   </QueryClientProvider>
 );
 

@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Confidence } from '@/types/decision';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { HelpCircle } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Button } from '@/components/ui/button';
+import { HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface ConfidenceMeterProps {
   value: number | Confidence;
@@ -18,6 +20,8 @@ export function ConfidenceMeter({
   showBreakdown = false,
   className 
 }: ConfidenceMeterProps) {
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  
   const isDetailed = typeof value === 'object';
   const overallValue = isDetailed ? value.overall : value;
 
@@ -37,24 +41,14 @@ export function ConfidenceMeter({
 
   return (
     <div className={cn('space-y-2', className)}>
+      {/* Default collapsed view */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-muted-foreground">System Confidence</span>
-          {isDetailed && value.explanation && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <HelpCircle className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-xs">
-                <p className="text-sm">{value.explanation}</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-        </div>
+        <span className="text-xs text-muted-foreground">System Confidence</span>
         <span className={cn('font-mono text-sm font-medium', textColor)}>
           {overallValue}%
         </span>
       </div>
+      
       <div className={cn('w-full bg-muted rounded-full overflow-hidden', heights[size])}>
         <div 
           className={cn('h-full rounded-full transition-all duration-700 ease-out', color)}
@@ -62,34 +56,89 @@ export function ConfidenceMeter({
         />
       </div>
       
-      {/* Breakdown for detailed confidence */}
-      {showBreakdown && isDetailed && (
-        <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border">
-          {value.dataQuality !== undefined && (
-            <div>
-              <span className="text-[10px] text-muted-foreground block">Data Quality</span>
-              <span className="text-xs font-mono font-medium text-foreground">{value.dataQuality}%</span>
-            </div>
-          )}
-          {value.modelPerformance !== undefined && (
-            <div>
-              <span className="text-[10px] text-muted-foreground block">Model</span>
-              <span className="text-xs font-mono font-medium text-foreground">{value.modelPerformance}%</span>
-            </div>
-          )}
-          {value.contextualFactors !== undefined && (
-            <div>
-              <span className="text-[10px] text-muted-foreground block">Context</span>
-              <span className="text-xs font-mono font-medium text-foreground">{value.contextualFactors}%</span>
-            </div>
-          )}
-        </div>
-      )}
-      
       {showExplanation && (
-        <p className="text-xs text-muted-foreground">
-          {label} — Based on historical patterns and data quality
-        </p>
+        <p className="text-xs text-muted-foreground">{label}</p>
+      )}
+
+      {/* Expandable explanation */}
+      {(showBreakdown || isDetailed) && (
+        <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="w-full justify-between h-8 text-xs px-2 mt-1">
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <HelpCircle className="w-3.5 h-3.5" />
+                Why this confidence level?
+              </span>
+              {detailsOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-3">
+            <div className="space-y-4 p-3 bg-muted/30 rounded-lg border border-border">
+              {/* Explanation */}
+              {isDetailed && value.explanation && (
+                <p className="text-sm text-muted-foreground">{value.explanation}</p>
+              )}
+              
+              {/* Breakdown */}
+              {showBreakdown && isDetailed && (
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Component breakdown</p>
+                  <div className="space-y-2">
+                    {value.dataQuality !== undefined && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Data Quality</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-info rounded-full" 
+                              style={{ width: `${value.dataQuality}%` }}
+                            />
+                          </div>
+                          <span className="text-xs font-mono text-foreground w-8">{value.dataQuality}%</span>
+                        </div>
+                      </div>
+                    )}
+                    {value.modelPerformance !== undefined && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Model Performance</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-info rounded-full" 
+                              style={{ width: `${value.modelPerformance}%` }}
+                            />
+                          </div>
+                          <span className="text-xs font-mono text-foreground w-8">{value.modelPerformance}%</span>
+                        </div>
+                      </div>
+                    )}
+                    {value.contextualFactors !== undefined && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Context Completeness</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-info rounded-full" 
+                              style={{ width: `${value.contextualFactors}%` }}
+                            />
+                          </div>
+                          <span className="text-xs font-mono text-foreground w-8">{value.contextualFactors}%</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* What could change this */}
+              <div className="pt-3 border-t border-border">
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-medium">This could change if:</span> new data arrives, patterns shift, or context is updated.
+                </p>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       )}
     </div>
   );
