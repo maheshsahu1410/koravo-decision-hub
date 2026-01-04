@@ -1,4 +1,4 @@
-import { Bell, User, Shield, Target } from 'lucide-react';
+import { Bell, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -6,21 +6,14 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { HumanControlBadge } from '@/components/decisions/HumanControlBadge';
+import { IntentSelector } from '@/components/decisions/IntentSelector';
 
 export function TopBar() {
   return (
     <header className="h-16 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-6 sticky top-0 z-10">
-      {/* Left: Current context */}
+      {/* Left: Intent Selector + Human Control */}
       <div className="flex items-center gap-6">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Target className="w-4 h-4 text-primary" />
-          </div>
-          <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Current Intent</p>
-            <p className="text-sm font-medium text-foreground">Margin Protection</p>
-          </div>
-        </div>
+        <IntentSelector variant="compact" />
         <div className="h-8 w-px bg-border" />
         <HumanControlBadge />
       </div>
